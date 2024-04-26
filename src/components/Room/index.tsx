@@ -18,6 +18,7 @@ const { height, width } = Dimensions.get('screen')
 const Room = (props: { room: IRoom }) => {
     const [enabledRoom, setEnabledRoom] = useState<boolean>(false)
     const [isMute, setIsMute] = useState<boolean>(false)
+    const [isCameraEnabled, setIsCameraEnabled] = useState<boolean>(true); 
     const [me, setMe] = useState<IUserOnMeet>()
     const [ws, setWs] = useState<any>()
     const [localStream, setLocalStream] = useState<any>(null)
@@ -32,20 +33,28 @@ const Room = (props: { room: IRoom }) => {
     useEffect(() => {
         if (!localStream) {
             (async () => {
-                let mediaConstraints = {
-                    audio: true,
-                    video: {
-                        frameRate: 30,
-                        facingMode: 'user'
+                try {
+                    const devices = await mediaDevices.enumerateDevices();
+                    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+                    if (videoDevices.length > 0) {
+                        const mediaStream = await mediaDevices.getUserMedia({
+                            audio: true,
+                            video: {
+                                deviceId: { exact: videoDevices[0].deviceId },
+                                frameRate: 30,
+                                facingMode: 'user'
+                            }
+                        });
+                        
+                        setLocalStream(mediaStream);  
+                    } else {
+                        console.error('Nenhuma câmera encontrada.');
                     }
-                };
-
-                const mediaStream = await mediaDevices.getUserMedia(mediaConstraints)
-                let videoTrack = await mediaStream.getVideoTracks()[0];
-                videoTrack.enabled = false;
-
-                setLocalStream(mediaStream)  
-            })()
+                } catch (error) {
+                    console.error('Erro ao acessar a câmera:', error);
+                }
+            })();
         }
 
         return () => {
@@ -112,6 +121,12 @@ const Room = (props: { room: IRoom }) => {
     const toggleMute = () => {
         ws.updateUserMute(!isMute)
         setIsMute(!isMute)
+    }
+
+    const toggleCamera = () => {
+        // Função para ativar/desativar a camera
+        setIsCameraEnabled(prevState => !prevState);
+        localStream.getVideoTracks()[0].enabled = !isCameraEnabled;
     }
 
     const onChangeControls = (command: string) => {
@@ -246,8 +261,25 @@ const Room = (props: { room: IRoom }) => {
                 </View>
             }
 
+            {/* Desafio add camera */}
+            {usersStream.map((userStream) => (
+                <RTCView
+                    key={userStream.userId}
+                    style={{ width: cellSize, height: cellSize }}
+                    streamURL={userStream.stream.toURL()} 
+                    objectFit="cover"
+                />
+            ))}
+
+            {/*  Desafio add camera */}
+            <View style={styles.videoControlsContainer}>
+                <TouchableOpacity onPress={() => toggleCamera()}>
+                    <Image style={styles.controlIcon} source={isCameraEnabled ? require('../../assets/images/camera_on.png') : require('../../assets/images/camera_off.png')} />
+                </TouchableOpacity>
+            </View>
+
         </ImageBackground>
     )
 }
 
-export default Room
+export default Room;

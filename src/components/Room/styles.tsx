@@ -92,7 +92,21 @@ const styles = StyleSheet.create({
         color: colors.white,
         fontSize: 8,
         fontFamily: 'biennale'
-    }
+    },
+  // Desafio add camera
+    videoControlsContainer: {
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+        borderRadius: 30,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        padding: 10,
+    },
+    controlIcon: {
+        width: 30,
+        height: 30,
+        tintColor: 'white',
+    },
 })
 
 export default styles
