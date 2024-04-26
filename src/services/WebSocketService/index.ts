@@ -25,6 +25,7 @@ export interface IUserOnMeet {
     y: number;
     orientation: string;
     muted: boolean;
+    stream?: MediaStream
 }
 
 const capitalizeFirstLetter = (text: string): string => {
@@ -63,6 +64,10 @@ class PeerConnectionSession {
 
     updateUserMute(muted: boolean) {
         this.socket.emit('toggl-mute-user', { link: this._link, userId: this._userId, muted })
+    }
+
+    updateUserCamera(stream: any) {
+        this.socket.emit('toggl-camera-user', { link: this._link, userId: this._userId, stream})
     }
 
     addPeerConnection(clientId: string, localStream : any, callback: any){
